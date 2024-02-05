@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ea23c229-6711-4845-a6d5-222323f9d323" name="Changes" comment="Init. Start of my new project">
-      <change afterPath="$PROJECT_DIR$/plantuml_parser.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
+    <list default="true" id="ea23c229-6711-4845-a6d5-222323f9d323" name="Changes" comment="A work in progress">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plantuml_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/plantuml_parser.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +120,7 @@
       <option name="presentableId" value="Default" />
       <updated>1707162101498</updated>
       <workItem from="1707162108057" duration="3010000" />
-      <workItem from="1707167877514" duration="4748000" />
+      <workItem from="1707167877514" duration="5868000" />
     </task>
     <task id="LOCAL-00001" summary="Init. Start of my new project">
       <option name="closed" value="true" />
@@ -132,7 +130,15 @@
       <option name="project" value="LOCAL" />
       <updated>1707162204000</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="A work in progress">
+      <option name="closed" value="true" />
+      <created>1707172970227</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1707172970227</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -140,12 +146,13 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Init. Start of my new project" />
-    <option name="LAST_COMMIT_MESSAGE" value="Init. Start of my new project" />
+    <MESSAGE value="A work in progress" />
+    <option name="LAST_COMMIT_MESSAGE" value="A work in progress" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/umlToSql$Flask__app_py_.coverage" NAME="Flask (app.py) Coverage Results" MODIFIED="1707167857536" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/umlToSql$testing.coverage" NAME="testing Coverage Results" MODIFIED="1707170475669" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/umlToSql$plantuml_parser.coverage" NAME="plantuml_parser Coverage Results" MODIFIED="1707172779049" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/umlToSql$plantuml_parser.coverage" NAME="plantuml_parser Coverage Results" MODIFIED="1707173892594" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/umlToSql$umlToSql.coverage" NAME="umlToSql Coverage Results" MODIFIED="1707167955966" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>

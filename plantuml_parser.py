@@ -1,8 +1,9 @@
-from pyparsing import (Word, alphas, alphanums, Suppress, Group, ZeroOrMore,
-                       Optional, delimitedList, LineStart, restOfLine,
-                       StringStart, StringEnd, ParseException, Combine,
-                       OneOrMore, Literal, oneOf,Empty)
+# Full code for the PlantUML to SQL parser
 
+from pyparsing import (Word, alphas, alphanums, Suppress, Group, ZeroOrMore,
+                       Optional, StringStart, StringEnd, ParseException, Combine,
+                       oneOf, Empty)
+import re
 
 def preprocess_plantuml(plantuml_code):
     """
@@ -38,8 +39,56 @@ def preprocess_plantuml(plantuml_code):
 
     return " ".join(relevant_lines)
 
+def parse_plantuml_class_to_sql_individual(class_def):
+    """
+    Parse a single PlantUML class definition to generate an SQL create query, identifying primary keys.
 
-def parse_plantuml_class_to_sql(preprocessed_code):
+    Args:
+    class_def (str): A string containing a single PlantUML class definition.
+
+    Returns:
+    str: An SQL create query for the given class definition.
+    """
+    # Basic definitions for parsing
+    identifier = Word(alphas, alphanums + "_")
+    datatype = Combine(Word(alphas, alphanums + "_") + Optional(Word(alphanums)))
+
+    # Visibility definition: '+' or '-' or absent
+    visibility = oneOf("+ -").setParseAction(lambda tokens: tokens[0].strip()) | Empty().setParseAction(lambda: "")
+
+    # Attribute definition with handling for visibility symbols
+    attribute = Group(Optional(visibility) + identifier + Suppress(":") + datatype)
+
+    # Class definition parser
+    class_parser = (Suppress("class") + identifier("class_name") + Suppress("{") +
+                    Group(ZeroOrMore(attribute))("attributes") + Suppress("}"))
+
+    output = ""
+    primary_keys = []  # List to store primary keys
+    try:
+        parsed_data = class_parser.parseString(class_def)
+        output += f"CREATE TABLE {parsed_data.class_name} (\n"
+        for attr in parsed_data.attributes:
+            # Extracting attribute name, type, and visibility
+            visibility, attr_name, attr_type = attr[0], attr[1], attr[2]
+            output += f"  {attr_name} {attr_type.upper()},\n"
+            # If visibility is '+', it's a primary key
+            if visibility == '+':
+                primary_keys.append(attr_name)
+
+        # Remove last comma and add primary key clause if primary keys exist
+        output = output.rstrip(',\n')
+        if primary_keys:
+            output += ",\n  PRIMARY KEY (" + ", ".join(primary_keys) + ")\n);\n\n"
+        else:
+            output += "\n);\n\n"
+
+    except ParseException as pe:
+        output = f"Parse error in class definition: {pe}"
+
+    return output
+
+def parse_plantuml_to_sql(preprocessed_code):
     """
     Parse the preprocessed PlantUML code to generate SQL create queries for multiple classes.
 
@@ -49,18 +98,22 @@ def parse_plantuml_class_to_sql(preprocessed_code):
     Returns:
     str: SQL create queries generated from the PlantUML code.
     """
-    # Split the preprocessed input into individual class definitions
-    class_defs = preprocessed_code.split("class")[1:]  # Skip the first split as it will be empty
-    class_defs = ["class" + class_def for class_def in class_defs]  # Re-add the 'class' keyword
+    # Use regex to accurately identify class definitions
+    class_pattern = re.compile(r'class\s+[\w\s\+\-:]*\{.*?\}', re.DOTALL)
+    class_defs = class_pattern.findall(preprocessed_code)
 
     output = ""
     for class_def in class_defs:
-        # Check if the segment is a class definition and not a relationship or other UML element
-        if "{" in class_def and "}" in class_def:
-            output += parse_plantuml_class_to_sql(class_def)
-        # Future enhancement can be done here to handle relationships
+        # Parse each class definition
+        output += parse_plantuml_class_to_sql_individual(class_def)
 
     return output
+
+# Example usage:
+# plantuml_input = "..."  # Your PlantUML code goes here
+# preprocessed_input = preprocess_plantuml(plantuml_input)
+# sql_output = parse_plantuml_to_sql(preprocessed_input)
+# print(sql_output)
 
 
 # Example usage
@@ -116,7 +169,7 @@ Manager "1" -down- "*" Department : "< manages"
 #Commenting out the execution to prevent it in the PCI
 preprocessed_input = preprocess_plantuml(plantuml_input)
 print(preprocessed_input)
-sql_output = parse_plantuml_class_to_sql(preprocessed_input)
+sql_output = parse_plantuml_to_sql(preprocessed_input)
 print(sql_output)
 
 
