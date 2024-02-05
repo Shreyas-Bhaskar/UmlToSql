@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlantUML to SQL Converter</title>
+</head>
+<body>
+    <h2>PlantUML to SQL Converter</h2>
+    <form method="POST">
+        <textarea name="plantuml_code" rows="10" cols="50" placeholder="Enter PlantUML code here"></textarea><br>
+        <input type="submit" value="Convert">
+    </form>
+    {% if sql_output %}
+        <pre>{{ sql_output }}</pre>
+    {% endif %}
+</body>
+</html>
