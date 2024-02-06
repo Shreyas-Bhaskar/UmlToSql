@@ -5,6 +5,32 @@ from pyparsing import (Word, alphas, alphanums, Suppress, Group, ZeroOrMore,
                        oneOf, Empty)
 import re
 
+
+def parse_foreign_keys(foreign_keys):
+    """
+    Revised parsing of foreign key relationships to correctly format SQL foreign key constraints.
+
+    Args:
+    foreign_keys (list): A list of strings representing foreign key relationships.
+
+    Returns:
+    dict: A dictionary mapping tables to their foreign key constraints.
+    """
+    fk_dict = {}
+    for fk in foreign_keys:
+        # Parsing based on the line structure:
+        # Department "1" -up- "*" Employee : "< employs"
+        parts = fk.split(" ")
+        target_table, source_table = parts[0], parts[-2]
+
+        # Assuming foreign key field name is the lowercase table name followed by 'id'
+        fk_field = source_table.lower() + "_id"
+        if target_table not in fk_dict:
+            fk_dict[target_table] = []
+        fk_dict[target_table].append(fk_field)
+
+    return fk_dict
+
 def preprocess_plantuml(plantuml_code):
     """
     Preprocess the PlantUML code to extract relevant class definitions and relationships.
@@ -39,12 +65,13 @@ def preprocess_plantuml(plantuml_code):
 
     return " ".join(relevant_lines)
 
-def parse_plantuml_class_to_sql_individual(class_def):
+def parse_plantuml_class_to_sql_individual(class_def, fk_constraints):
     """
-    Parse a single PlantUML class definition to generate an SQL create query, identifying primary keys.
+    Parse a single PlantUML class definition to generate an SQL create query, including foreign key constraints.
 
     Args:
     class_def (str): A string containing a single PlantUML class definition.
+    fk_constraints (dict): A dictionary of foreign key constraints.
 
     Returns:
     str: An SQL create query for the given class definition.
@@ -52,14 +79,8 @@ def parse_plantuml_class_to_sql_individual(class_def):
     # Basic definitions for parsing
     identifier = Word(alphas, alphanums + "_")
     datatype = Combine(Word(alphas, alphanums + "_") + Optional(Word(alphanums)))
-
-    # Visibility definition: '+' or '-' or absent
     visibility = oneOf("+ -").setParseAction(lambda tokens: tokens[0].strip()) | Empty().setParseAction(lambda: "")
-
-    # Attribute definition with handling for visibility symbols
     attribute = Group(Optional(visibility) + identifier + Suppress(":") + datatype)
-
-    # Class definition parser
     class_parser = (Suppress("class") + identifier("class_name") + Suppress("{") +
                     Group(ZeroOrMore(attribute))("attributes") + Suppress("}"))
 
@@ -67,21 +88,27 @@ def parse_plantuml_class_to_sql_individual(class_def):
     primary_keys = []  # List to store primary keys
     try:
         parsed_data = class_parser.parseString(class_def)
-        output += f"CREATE TABLE {parsed_data.class_name} (\n"
+        class_name = parsed_data.class_name
+        output += f"CREATE TABLE {class_name} (\n"
         for attr in parsed_data.attributes:
-            # Extracting attribute name, type, and visibility
             visibility, attr_name, attr_type = attr[0], attr[1], attr[2]
             output += f"  {attr_name} {attr_type.upper()},\n"
-            # If visibility is '+', it's a primary key
             if visibility == '+':
                 primary_keys.append(attr_name)
 
         # Remove last comma and add primary key clause if primary keys exist
         output = output.rstrip(',\n')
         if primary_keys:
-            output += ",\n  PRIMARY KEY (" + ", ".join(primary_keys) + ")\n);\n\n"
-        else:
-            output += "\n);\n\n"
+            output += ",\n  PRIMARY KEY (" + ", ".join(primary_keys) + ")"
+
+        # Add foreign key constraints if any
+        if class_name in fk_constraints:
+            for fk_field in fk_constraints[class_name]:
+                # Assuming the referenced table name is the first part of the foreign key field name
+                ref_table = fk_field.rsplit('id', 1)[0].capitalize()
+                output += f",\n  FOREIGN KEY ({fk_field}) REFERENCES {ref_table}({fk_field})"
+
+        output += "\n);\n\n"
 
     except ParseException as pe:
         output = f"Parse error in class definition: {pe}"
@@ -91,24 +118,19 @@ def parse_plantuml_class_to_sql_individual(class_def):
 def parse_plantuml_to_sql(preprocessed_code):
     """
     Parse the preprocessed PlantUML code to generate SQL create queries for multiple classes.
-
-    Args:
-    preprocessed_code (str): The preprocessed PlantUML code as a string.
-
-    Returns:
-    str: SQL create queries generated from the PlantUML code.
     """
-    # Use regex to accurately identify class definitions
-    class_pattern = re.compile(r'class\s+[\w\s\+\-:]*\{.*?\}', re.DOTALL)
-    class_defs = class_pattern.findall(preprocessed_code)
+    # Extract class definitions and foreign key relationships
+    class_defs = re.findall(r'class\s+[\w\s\+\-:]*\{.*?\}', preprocessed_code, re.DOTALL)
+    foreign_key_relations = re.findall(r'\w+\s+".*"\s+-[a-z-]+\s+"\*"\s+\w+\s+:.*', preprocessed_code)
+
+    # Parse foreign keys
+    fk_constraints = parse_foreign_keys(foreign_key_relations)
 
     output = ""
     for class_def in class_defs:
-        # Parse each class definition
-        output += parse_plantuml_class_to_sql_individual(class_def)
+        output += parse_plantuml_class_to_sql_individual(class_def, fk_constraints)
 
     return output
-
 # Example usage:
 # plantuml_input = "..."  # Your PlantUML code goes here
 # preprocessed_input = preprocess_plantuml(plantuml_input)
@@ -153,11 +175,6 @@ class Engineer {
 Employee <|-- Manager
 Employee <|-- Engineer
 
-'Other Relationships
-class Assignment {
-  + { employee_id, project_id } : varchar
-  - hours_worked : int
-}
 
 'Aggregation and Composition
 Department "1" -up- "*" Employee : "< employs"
